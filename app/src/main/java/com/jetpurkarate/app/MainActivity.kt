@@ -8,7 +8,9 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
@@ -28,15 +30,30 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         createChannel()
         requestNotificationPermission()
+
         webView = findViewById(R.id.webView)
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
         webView.settings.mediaPlaybackRequiresUserGesture = false
-        webView.webChromeClient = WebChromeClient()
+        webView.settings.allowFileAccess = true
+        webView.settings.allowContentAccess = true
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onPermissionRequest(request: PermissionRequest) {
+                runOnUiThread {
+                    val allowed = request.resources.filter {
+                        it == PermissionRequest.RESOURCE_AUDIO_CAPTURE ||
+                        it == PermissionRequest.RESOURCE_VIDEO_CAPTURE
+                    }.toTypedArray()
+                    if (allowed.isNotEmpty()) request.grant(allowed)
+                }
+            }
+        }
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                val url = request.url.toString()
                 return if (url.startsWith("https://jetpurkarate.in") || url.startsWith("http://jetpurkarate.in")) {
                     false
                 } else {
@@ -45,6 +62,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
         webView.loadUrl(intent.getStringExtra("link") ?: siteUrl)
         FirebaseMessaging.getInstance().token.addOnSuccessListener { registerToken(it) }
     }
@@ -61,14 +79,19 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
         }
     }
 
     private fun createChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel("jetpurkarate", "Jetpur Karate Notifications", NotificationManager.IMPORTANCE_HIGH)
+            val channel = NotificationChannel(
+                "jetpurkarate",
+                "Jetpur Karate Notifications",
+                NotificationManager.IMPORTANCE_HIGH
+            )
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
     }
