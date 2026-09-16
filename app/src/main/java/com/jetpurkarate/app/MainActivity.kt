@@ -8,7 +8,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -40,17 +39,7 @@ class MainActivity : ComponentActivity() {
         webView.settings.mediaPlaybackRequiresUserGesture = false
         webView.settings.allowFileAccess = true
         webView.settings.allowContentAccess = true
-        webView.webChromeClient = object : WebChromeClient() {
-            override fun onPermissionRequest(request: PermissionRequest) {
-                runOnUiThread {
-                    val allowed = request.resources.filter {
-                        it == PermissionRequest.RESOURCE_AUDIO_CAPTURE ||
-                        it == PermissionRequest.RESOURCE_VIDEO_CAPTURE
-                    }.toTypedArray()
-                    if (allowed.isNotEmpty()) request.grant(allowed)
-                }
-            }
-        }
+        webView.webChromeClient = WebChromeClient()
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val url = request.url.toString()
