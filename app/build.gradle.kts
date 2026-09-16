@@ -24,6 +24,10 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    tasks.withType<JavaCompile>().configureEach {
+        options.release.set(17)
+    }
 }
 
 dependencies {
