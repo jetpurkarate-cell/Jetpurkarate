@@ -228,7 +228,8 @@ window.sendOtp=async()=>{
 };
 window.verifyOtp=async()=>{
   const email=$("email").value.trim(), token=$("otp").value.trim();
-  if(!email||!token){status("Please enter email and 8-digit OTP.","err");return;}\n  if(!/^\\d{8}$/.test(token)){status("Please enter the complete 8-digit OTP.","err");return;}
+  if(!email||!token){status("Please enter email and 8-digit OTP.","err");return;}
+  if(!/^\d{8}$/.test(token)){status("Please enter the complete 8-digit OTP.","err");return;}
   $("verifyBtn").disabled=true;
   $("verifyBtn").textContent="Verifying...";
   try{
