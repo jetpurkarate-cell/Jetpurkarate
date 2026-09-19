@@ -41,3 +41,15 @@ create index if not exists birthdays_due_idx
 -- Run the processor every minute. Replace PROJECT_REF and CRON_SECRET
 -- in the Supabase Dashboard/Vault before enabling this job.
 -- See README for the exact setup.
+
+
+-- Admin panel access: Supabase Auth users only.
+create policy "authenticated notification schedules"
+on public.notification_schedules
+for all to authenticated
+using (true) with check (true);
+
+create policy "authenticated birthdays"
+on public.birthdays
+for all to authenticated
+using (true) with check (true);
