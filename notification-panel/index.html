@@ -111,14 +111,20 @@ button:hover{transform:translateY(-1px);filter:brightness(1.05)}
     <div class="card">
       <div class="icon">🗓️</div>
       <h2>Schedule Notification</h2>
-      <p class="help">Choose an India-local date and time. The server will send it automatically.</p>
+      <p class="help">Choose whether this notification is Daily or One Time, then set the required time.</p>
       <label>Title</label>
       <input id="sTitle" placeholder="Scheduled notification title">
       <label>Message</label>
       <textarea id="sBody" placeholder="Write the scheduled message..."></textarea>
+      <label>Schedule Type</label>
+      <select id="sType" style="width:100%;border:1px solid #d8dfeb;background:#fbfcfe;border-radius:12px;padding:12px 13px;font:inherit;outline:none" onchange="toggleScheduleType()">
+        <option value="daily">Daily</option>
+        <option value="one_time">One Time</option>
+      </select>
+      <div id="sDateWrap" style="display:none"><label>Date (India)</label><input id="sDate" type="date"></div>
       <label>Time (India)</label>
       <input id="sTime" type="time" value="09:00">
-      <p class="help" style="margin-top:8px">This notification will repeat every day at the selected Indian time.</p>
+      <p id="sTypeHelp" class="help" style="margin-top:8px">This notification will repeat every day at the selected Indian time.</p>
       <label>Website link (optional)</label>
       <input id="sLink" placeholder="https://jetpurkarate.in/">
       <div class="actions"><button id="scheduleBtn" onclick="schedule()">🗓️ Schedule Notification</button><button id="cancelScheduleEditBtn" class="secondary" onclick="cancelScheduleEdit()" style="display:none">Cancel Edit</button></div>
@@ -136,10 +142,10 @@ button:hover{transform:translateY(-1px);filter:brightness(1.05)}
 
 <div id="editModal" style="display:none;position:fixed;inset:0;background:#0f172a88;z-index:1000;padding:20px;overflow:auto">
   <div class="card" style="max-width:620px;margin:8vh auto">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><h2>Edit Scheduled Notification</h2><p class="help">Update the notification details and scheduled date/time.</p></div><button class="secondary" onclick="closeEdit()">✕</button></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><h2>Edit Scheduled Notification</h2><p class="help">Update the notification type, details and scheduled time.</p></div><button class="secondary" onclick="closeEdit()">✕</button></div>
     <label>Title</label><input id="eTitle" placeholder="Notification title">
     <label>Message</label><textarea id="eBody" placeholder="Notification message..."></textarea>
-    <label>Date</label><input id="eDate" type="date"><label>Time</label><input id="eTime" type="time">
+    <label>Schedule Type</label><select id="eType" style="width:100%;border:1px solid #d8dfeb;background:#fbfcfe;border-radius:12px;padding:12px 13px;font:inherit;outline:none" onchange="toggleEditScheduleType()"><option value="daily">Daily</option><option value="one_time">One Time</option></select><div id="eDateWrap" style="display:none"><label>Date (India)</label><input id="eDate" type="date"></div><label>Time (India)</label><input id="eTime" type="time">
     <label>Website link (optional)</label><input id="eLink" placeholder="https://jetpurkarate.in/">
     <div class="actions"><button id="saveEditBtn" onclick="saveEdit()">Save Changes</button><button class="secondary" onclick="closeEdit()">Cancel</button></div>
   </div>
@@ -151,6 +157,8 @@ const SUPABASE_URL="https://avwpohoxcxbeezpuxbpr.supabase.co";
 const SUPABASE_KEY="sb_publishable_WLd8v0cTTUFFZany_sAfmg_FmIyei2f";
 const supabase=createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
+window.toggleScheduleType=()=>{const daily=$("sType").value==="daily";$("sDateWrap").style.display=daily?"none":"block";$("sDate").required=!daily;$("sTypeHelp").textContent=daily?"This notification will repeat every day at the selected Indian time.":"This notification will be sent once on the selected Indian date and time.";};
+window.toggleEditScheduleType=()=>{const daily=$("eType").value==="daily";$("eDateWrap").style.display=daily?"none":"block";};
 
 function status(message,type="info"){
   const el=$("status"); el.className=type; el.textContent=message;
@@ -254,21 +262,21 @@ function istToUtc(date,time){const [y,m,d]=date.split("-").map(Number);const [hh
 function formatScheduleDate(iso){try{return new Intl.DateTimeFormat('en-IN',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Kolkata'}).format(new Date(iso));}catch{return iso;}}
 function esc(value){return String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 window.loadSchedules=async()=>{const box=$("scheduleList");box.innerHTML="<p class='help'>Loading scheduled notifications...</p>";try{const r=await api("notification_schedules?select=*&status=eq.pending&order=notification_time.asc");const rows=await r.json();if(!rows.length){box.innerHTML="<p class='help'>No scheduled notifications found.</p>";return;}box.innerHTML=rows.map(item=>{const st=String(item.status||'').toLowerCase(),editable=st==='pending'||st==='scheduled'||st==='failed';return '<div class="schedule-item"><div class="schedule-row"><div style="flex:1"><div class="schedule-title">'+esc(item.title)+' <span class="schedule-status status-'+esc(st)+'">'+esc(st||'unknown')+'</span></div><div class="schedule-meta">'+esc(formatScheduleDate(item.scheduled_at))+'<br>'+esc(item.body)+(item.link?'<br>🔗 '+esc(item.link):'')+(item.error_message?'<br>⚠️ '+esc(item.error_message):'')+'</div></div></div><div class="schedule-actions">'+(editable?'<button onclick="editSchedule(\''+item.id+'\')">Edit</button>':'')+(st!== 'sent'?'<button class="danger" onclick="deleteSchedule(\''+item.id+'\')">Delete</button>':'')+'</div></div>';}).join('');}catch(e){box.innerHTML="<p class='help' style='color:#b42318'>Could not load schedules: "+esc(e.message)+"</p>";}};
-window.editSchedule=async(id)=>{try{const r=await api('notification_schedules?id=eq.'+encodeURIComponent(id)+'&select=*');const rows=await r.json();if(!rows.length)throw new Error('Scheduled notification not found.');const item=rows[0],st=String(item.status||'').toLowerCase();if(st==='sent')throw new Error('Sent notifications cannot be edited.');editingScheduleId=id;$("eTitle").value=item.title||'';$("eBody").value=item.body||'';$("eLink").value=item.link||'';const d=new Date(item.scheduled_at),p=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d),g=t=>p.find(x=>x.type===t)?.value||'';$("eDate").value=g('year')+'-'+g('month')+'-'+g('day');$("eTime").value=g('hour')+':'+g('minute');$("editModal").style.display='block';}catch(e){status('Edit failed: '+e.message,'err');}};
+window.editSchedule=async(id)=>{try{const r=await api('notification_schedules?id=eq.'+encodeURIComponent(id)+'&select=*');const rows=await r.json();if(!rows.length)throw new Error('Scheduled notification not found.');const item=rows[0],st=String(item.status||'').toLowerCase();if(st==='sent')throw new Error('Sent notifications cannot be edited.');editingScheduleId=id;$("eTitle").value=item.title||'';$("eBody").value=item.body||'';$("eLink").value=item.link||'';$("eType").value=item.repeat_daily===true?'daily':'one_time';const d=new Date(item.scheduled_at),p=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d),g=t=>p.find(x=>x.type===t)?.value||'';$("eDate").value=g('year')+'-'+g('month')+'-'+g('day');$("eTime").value=item.notification_time?String(item.notification_time).slice(0,5):g('hour')+':'+g('minute');toggleEditScheduleType();$("editModal").style.display='block';}catch(e){status('Edit failed: '+e.message,'err');}};
 window.closeEdit=()=>{$("editModal").style.display='none';};
-window.saveEdit=async()=>{if(!editingScheduleId)return;const title=$("eTitle").value.trim(),body=$("eBody").value.trim(),date=$("eDate").value,time=$("eTime").value;if(!title||!body||!date||!time){status('Please fill title, message, date and time.','err');return;}$("saveEditBtn").disabled=true;$("saveEditBtn").textContent='Saving...';try{await api('notification_schedules?id=eq.'+encodeURIComponent(editingScheduleId),{method:'PATCH',body:JSON.stringify({title,body,link:$("eLink").value.trim()||null,scheduled_at:istToUtc(date,time),notification_time:time+":00",repeat_daily:false,status:'pending',sent_at:null,error_message:null})});closeEdit();status('✓ Scheduled notification updated successfully.','ok');editingScheduleId=null;await loadSchedules();}catch(e){status('Update failed: '+e.message,'err');}finally{$("saveEditBtn").disabled=false;$("saveEditBtn").textContent='Save Changes';}};
+window.saveEdit=async()=>{if(!editingScheduleId)return;const title=$("eTitle").value.trim(),body=$("eBody").value.trim(),type=$("eType").value,date=$("eDate").value,time=$("eTime").value;if(!title||!body||!time||(type==='one_time'&&!date)){status(type==='one_time'?'Please fill title, message, date and time.':'Please fill title, message and time.','err');return;}$("saveEditBtn").disabled=true;$("saveEditBtn").textContent='Saving...';try{await api('notification_schedules?id=eq.'+encodeURIComponent(editingScheduleId),{method:'PATCH',body:JSON.stringify({title,body,link:$("eLink").value.trim()||null,scheduled_at:istToUtc(type==='daily'?'2000-01-01':date,time),notification_time:time+":00",repeat_daily:type==='daily',status:'pending',sent_at:null,error_message:null})});closeEdit();status('✓ Scheduled notification updated successfully.','ok');editingScheduleId=null;await loadSchedules();}catch(e){status('Update failed: '+e.message,'err');}finally{$("saveEditBtn").disabled=false;$("saveEditBtn").textContent='Save Changes';}};
 window.deleteSchedule=async(id)=>{if(!confirm('Delete this scheduled notification?'))return;try{await api('notification_schedules?id=eq.'+encodeURIComponent(id),{method:'DELETE'});status('✓ Scheduled notification deleted.','ok');await loadSchedules();}catch(e){status('Delete failed: '+e.message,'err');}};
 window.cancelScheduleEdit=()=>{editingScheduleId=null;$("sTitle").value='';$("sBody").value='';$("sLink").value='';$("scheduleBtn").textContent='🗓️ Schedule Notification';$("cancelScheduleEditBtn").style.display='none';};
 window.schedule=async()=>{
-  const title=$("sTitle").value.trim(),body=$("sBody").value.trim(),time=$("sTime").value;
-  if(!title||!body||!time){status("Please fill title, message and time.","err");return;}
+  const title=$("sTitle").value.trim(),body=$("sBody").value.trim(),type=$("sType").value,date=$("sDate").value,time=$("sTime").value;
+  if(!title||!body||!time||(type==="one_time"&&!date)){status(type==="one_time"?"Please fill title, message, date and time.":"Please fill title, message and time.","err");return;}
   try{
     await api("notification_schedules",{method:"POST",body:JSON.stringify({
       title,body,link:$("sLink").value.trim()||null,
-      scheduled_at:istToUtc("2000-01-01",time),notification_time:time+":00",repeat_daily:true,status:"pending"
+      scheduled_at:istToUtc(type==="daily"?"2000-01-01":date,time),notification_time:time+":00",repeat_daily:type==="daily",status:"pending"
     })});
     status("✓ Notification scheduled successfully.","ok");
-    $("sTitle").value="";$("sBody").value="";$("sLink").value="";
+    $("sTitle").value="";$("sBody").value="";$("sDate").value="";$("sLink").value="";$("sType").value="daily";toggleScheduleType();
     await loadSchedules();
   }catch(e){status("Schedule failed: "+e.message,"err");}
 };
