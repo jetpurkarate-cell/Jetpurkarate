@@ -9,14 +9,14 @@
 :root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#172033;background:#f4f7fb}
 body{margin:0;min-height:100vh;background:linear-gradient(135deg,#eef3ff 0%,#f8fafc 55%,#eef8f5 100%)}
 .wrap{max-width:1050px;margin:auto;padding:28px 16px 50px}
-.top{background:linear-gradient(135deg,#111827,#243b72);color:#fff;border-radius:24px;padding:28px 30px;box-shadow:0 18px 45px #17255422;margin-bottom:20px}
-.brand{display:flex;justify-content:space-between;align-items:center;gap:20px}
+.top{background:linear-gradient(135deg,#111827 0%,#243b72 55%,#155e75 100%);color:#fff;border-radius:24px;padding:28px 30px;box-shadow:0 18px 45px #17255422;margin-bottom:20px;position:relative;overflow:hidden}.top:after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;right:-80px;top:-100px;background:#ffffff12}
+.brand{display:flex;justify-content:space-between;align-items:center;gap:20px;position:relative;z-index:1}.brand-left{display:flex;align-items:center;gap:16px}.brand-logo{width:64px;height:64px;border-radius:18px;object-fit:contain;background:#fff;padding:7px;box-shadow:0 8px 20px #0003}
 .badge{display:inline-flex;align-items:center;gap:8px;background:#ffffff18;border:1px solid #ffffff25;border-radius:999px;padding:7px 12px;font-size:13px}
 .dot{width:8px;height:8px;border-radius:50%;background:#34d399}
 h1{margin:12px 0 5px;font-size:30px}
 .sub{margin:0;color:#dbe5ff}
 .card{background:#fff;border:1px solid #e6ebf3;border-radius:20px;padding:22px;box-shadow:0 10px 30px #1720330b;margin-bottom:16px}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.grid{display:flex;flex-direction:column;gap:18px}
 .full{grid-column:1/-1}
 h2{font-size:19px;margin:0 0 5px}
 .help{color:#6b7280;font-size:13px;margin:0 0 15px}
@@ -46,7 +46,7 @@ button:hover{transform:translateY(-1px);filter:brightness(1.05)}
 .status-pending,.status-scheduled{background:#eff6ff;color:#1d4ed8}.status-sent{background:#ecfdf3;color:#067647}.status-failed{background:#fef3f2;color:#b42318}
 .schedule-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.schedule-actions button{min-width:auto;padding:8px 11px;font-size:12px}
 @media(max-width:760px){.schedule-row{flex-direction:column}}
-@media(max-width:760px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.brand{align-items:flex-start;flex-direction:column}}
+@media(max-width:760px){.brand{align-items:flex-start;flex-direction:column}.top{padding:22px 20px}h1{font-size:25px}}
 </style>
 </head>
 <body>
@@ -77,10 +77,13 @@ button:hover{transform:translateY(-1px);filter:brightness(1.05)}
 <div id="app" class="wrap" style="display:none">
   <div class="top">
     <div class="brand">
-      <div>
+      <div class="brand-left">
+        <img class="brand-logo" src="https://jetpurkarate.in/favicon.png" alt="Jetpur Karate logo" onerror="this.style.display='none'">
+        <div>
         <div class="badge"><span class="dot"></span> Notification Center</div>
         <h1>Jetpur Karate Team</h1>
-        <p class="sub">Send, schedule and manage member birthday notifications.</p>
+        <p class="sub">Send and schedule notifications for Jetpur Karate members.</p>
+        </div>
       </div>
       <div>
         <div id="userEmail" class="user"></div>
@@ -102,7 +105,7 @@ button:hover{transform:translateY(-1px);filter:brightness(1.05)}
       <textarea id="nowBody" placeholder="Write your notification message..."></textarea>
       <label>Website link (optional)</label>
       <input id="nowLink" placeholder="https://jetpurkarate.in/">
-      <div class="actions"><button id="sendBtn" onclick="sendNow()">Send Now</button></div>
+      <div class="actions"><button id="sendBtn" onclick="sendNow()">🚀 Send Now</button></div>
     </div>
 
     <div class="card">
@@ -120,32 +123,7 @@ button:hover{transform:translateY(-1px);filter:brightness(1.05)}
       <label>Repeat</label><div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px"><input id="sDaily" type="checkbox" style="width:auto"> <span>Send every day at this Indian time</span></div>
       <label>Website link (optional)</label>
       <input id="sLink" placeholder="https://jetpurkarate.in/">
-      <div class="actions"><button id="scheduleBtn" onclick="schedule()">Schedule</button><button id="cancelScheduleEditBtn" class="secondary" onclick="cancelScheduleEdit()" style="display:none">Cancel Edit</button></div>
-    </div>
-
-    <div class="card full">
-      <div class="icon">🎂</div>
-      <h2>Birthday Notification</h2>
-      <p class="help">Save a member's birthday. The notification service checks birthdays daily and sends the configured message.</p>
-      <div class="grid">
-        <div>
-          <label>Name</label>
-          <input id="bName" placeholder="Student / Teacher / Member name">
-        </div>
-        <div>
-          <label>Branch (optional)</label>
-          <input id="bBranch" placeholder="Branch name">
-        </div>
-        <div>
-          <label>Birth date</label>
-          <input id="bDate" type="date">
-        </div>
-        <div>
-          <label>Notification time</label>
-          <input id="bTime" type="time" value="09:00">
-        </div>
-      </div>
-      <div class="actions"><button onclick="addBirthday()">Save Birthday</button></div>
+      <div class="actions"><button id="scheduleBtn" onclick="schedule()">🗓️ Schedule Notification</button><button id="cancelScheduleEditBtn" class="secondary" onclick="cancelScheduleEdit()" style="display:none">Cancel Edit</button></div>
     </div>
   </div>
 
@@ -282,7 +260,7 @@ window.editSchedule=async(id)=>{try{const r=await api('notification_schedules?id
 window.closeEdit=()=>{$("editModal").style.display='none';};
 window.saveEdit=async()=>{if(!editingScheduleId)return;const title=$("eTitle").value.trim(),body=$("eBody").value.trim(),date=$("eDate").value,time=$("eTime").value;if(!title||!body||!date||!time){status('Please fill title, message, date and time.','err');return;}$("saveEditBtn").disabled=true;$("saveEditBtn").textContent='Saving...';try{await api('notification_schedules?id=eq.'+encodeURIComponent(editingScheduleId),{method:'PATCH',body:JSON.stringify({title,body,link:$("eLink").value.trim()||null,scheduled_at:istToUtc(date,time),notification_time:time+":00",repeat_daily:false,status:'pending',sent_at:null,error_message:null})});closeEdit();status('✓ Scheduled notification updated successfully.','ok');editingScheduleId=null;await loadSchedules();}catch(e){status('Update failed: '+e.message,'err');}finally{$("saveEditBtn").disabled=false;$("saveEditBtn").textContent='Save Changes';}};
 window.deleteSchedule=async(id)=>{if(!confirm('Delete this scheduled notification?'))return;try{await api('notification_schedules?id=eq.'+encodeURIComponent(id),{method:'DELETE'});status('✓ Scheduled notification deleted.','ok');await loadSchedules();}catch(e){status('Delete failed: '+e.message,'err');}};
-window.cancelScheduleEdit=()=>{editingScheduleId=null;$("sTitle").value='';$("sBody").value='';$("sLink").value='';$("scheduleBtn").textContent='Schedule';$("cancelScheduleEditBtn").style.display='none';};
+window.cancelScheduleEdit=()=>{editingScheduleId=null;$("sTitle").value='';$("sBody").value='';$("sLink").value='';$("scheduleBtn").textContent='🗓️ Schedule Notification';$("cancelScheduleEditBtn").style.display='none';};
 window.schedule=async()=>{
   const title=$("sTitle").value.trim(),body=$("sBody").value.trim(),date=$("sDate").value,time=$("sTime").value;
   if(!title||!body||!date||!time){status("Please fill title, message, date and time.","err");return;}
