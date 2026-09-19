@@ -67,8 +67,8 @@ button:hover{transform:translateY(-1px);filter:brightness(1.05)}
       <input id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="8" minlength="8" pattern="[0-9]{8}" placeholder="8-digit OTP">
     </div>
     <div class="actions">
-      <button id="loginBtn" onclick="sendOtp()">Send OTP</button>
-      <button id="verifyBtn" class="secondary" onclick="verifyOtp()" style="display:none">Verify OTP</button>
+      <button id="loginBtn" type="button">Send OTP</button>
+      <button id="verifyBtn" class="secondary" type="button" style="display:none">Verify OTP</button>
     </div>
     <p class="help">Enter your admin email. An 8-digit OTP will be sent to that email.</p>
   </div>
@@ -246,6 +246,8 @@ window.verifyOtp=async()=>{
   }
 };
 window.logout=async()=>{await supabase.auth.signOut();render();};
+$("loginBtn").addEventListener("click",sendOtp);
+$("verifyBtn").addEventListener("click",verifyOtp);
 window.sendNow=async()=>{
   const title=$("nowTitle").value.trim(), body=$("nowBody").value.trim(), link=$("nowLink").value.trim();
   if(!title||!body){status("Please enter both notification title and message.","err");return;}
