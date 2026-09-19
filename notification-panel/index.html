@@ -288,7 +288,7 @@ window.schedule=async()=>{
   try{
     await api("notification_schedules",{method:"POST",body:JSON.stringify({
       title,body,link:$("sLink").value.trim()||null,
-      scheduled_at:istToUtc(date,time),notification_time:time+":00",repeat_daily:$(\"sDaily\").checked,status:"pending"
+      scheduled_at:istToUtc(date,time),notification_time:time+":00",repeat_daily:$("sDaily").checked,status:"pending"
     })});
     status("✓ Notification scheduled successfully.","ok");
     $("sTitle").value="";$("sBody").value="";$("sLink").value="";$("sDaily").checked=false;
