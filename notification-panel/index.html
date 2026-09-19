@@ -282,7 +282,7 @@ function render(){
   });
 }
 supabase.auth.onAuthStateChange(()=>render());
-$("sDate").value=new Date().toISOString().slice(0,10);
+$("sDate").value=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Kolkata"}).format(new Date());
 render();
 setTimeout(loadSchedules,500);
 </script>
