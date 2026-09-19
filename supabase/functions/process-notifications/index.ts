@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
     const { data: schedules, error: scheduleError } = await supabase
       .from("notification_schedules")
       .select("*")
-      .eq("status","pending")
+      .in("status",["pending","scheduled"])
       .lte("scheduled_at", now.toISOString())
       .order("scheduled_at")
       .limit(50);
