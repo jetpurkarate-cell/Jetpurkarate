@@ -38,6 +38,14 @@ button:hover{transform:translateY(-1px);filter:brightness(1.05)}
 .err{display:block!important;background:#fef3f2;color:#b42318;border:1px solid #fecdca}
 .info{display:block!important;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
 .user{font-size:13px;color:#dbe5ff}
+.schedule-item{border:1px solid #e6ebf3;border-radius:14px;padding:15px;margin-top:10px;background:#fbfcfe}
+.schedule-row{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+.schedule-title{font-weight:800;color:#172033;margin-bottom:4px}
+.schedule-meta{font-size:12px;color:#6b7280;line-height:1.6}
+.schedule-status{display:inline-block;padding:4px 9px;border-radius:999px;font-size:11px;font-weight:800;margin-left:6px}
+.status-pending,.status-scheduled{background:#eff6ff;color:#1d4ed8}.status-sent{background:#ecfdf3;color:#067647}.status-failed{background:#fef3f2;color:#b42318}
+.schedule-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.schedule-actions button{min-width:auto;padding:8px 11px;font-size:12px}
+@media(max-width:760px){.schedule-row{flex-direction:column}}
 @media(max-width:760px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.brand{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
@@ -105,7 +113,7 @@ button:hover{transform:translateY(-1px);filter:brightness(1.05)}
       </div>
       <label>Website link (optional)</label>
       <input id="sLink" placeholder="https://jetpurkarate.in/">
-      <div class="actions"><button onclick="schedule()">Schedule</button></div>
+      <div class="actions"><button id="scheduleBtn" onclick="schedule()">Schedule</button><button id="cancelScheduleEditBtn" class="secondary" onclick="cancelScheduleEdit()" style="display:none">Cancel Edit</button></div>
     </div>
 
     <div class="card full">
@@ -132,6 +140,25 @@ button:hover{transform:translateY(-1px);filter:brightness(1.05)}
       </div>
       <div class="actions"><button onclick="addBirthday()">Save Birthday</button></div>
     </div>
+  </div>
+
+  <div class="card">
+    <div class="brand" style="color:#172033">
+      <div><div class="icon">📋</div><h2>Scheduled Notifications</h2><p class="help">View, edit or delete notifications that have been scheduled.</p></div>
+      <button class="secondary" onclick="loadSchedules()">↻ Refresh</button>
+    </div>
+    <div id="scheduleList"><p class="help">Loading scheduled notifications...</p></div>
+  </div>
+</div>
+
+<div id="editModal" style="display:none;position:fixed;inset:0;background:#0f172a88;z-index:1000;padding:20px;overflow:auto">
+  <div class="card" style="max-width:620px;margin:8vh auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><h2>Edit Scheduled Notification</h2><p class="help">Update the notification details and scheduled date/time.</p></div><button class="secondary" onclick="closeEdit()">✕</button></div>
+    <label>Title</label><input id="eTitle" placeholder="Notification title">
+    <label>Message</label><textarea id="eBody" placeholder="Notification message..."></textarea>
+    <label>Date</label><input id="eDate" type="date"><label>Time</label><input id="eTime" type="time">
+    <label>Website link (optional)</label><input id="eLink" placeholder="https://jetpurkarate.in/">
+    <div class="actions"><button id="saveEditBtn" onclick="saveEdit()">Save Changes</button><button class="secondary" onclick="closeEdit()">Cancel</button></div>
   </div>
 </div>
 
@@ -210,16 +237,26 @@ window.sendNow=async()=>{
     status("Notification failed: "+e.message,"err");
   }finally{$("sendBtn").disabled=false;$("sendBtn").textContent="Send Now";}
 };
+let editingScheduleId=null;
+function formatScheduleDate(iso){try{return new Intl.DateTimeFormat('en-IN',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Kolkata'}).format(new Date(iso));}catch{return iso;}}
+function esc(value){return String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+window.loadSchedules=async()=>{const box=$("scheduleList");box.innerHTML="<p class='help'>Loading scheduled notifications...</p>";try{const r=await api("notification_schedules?select=*&order=scheduled_at.asc");const rows=await r.json();if(!rows.length){box.innerHTML="<p class='help'>No scheduled notifications found.</p>";return;}box.innerHTML=rows.map(item=>{const st=String(item.status||'').toLowerCase(),editable=st==='pending'||st==='scheduled'||st==='failed';return '<div class="schedule-item"><div class="schedule-row"><div style="flex:1"><div class="schedule-title">'+esc(item.title)+' <span class="schedule-status status-'+esc(st)+'">'+esc(st||'unknown')+'</span></div><div class="schedule-meta">'+esc(formatScheduleDate(item.scheduled_at))+'<br>'+esc(item.body)+(item.link?'<br>🔗 '+esc(item.link):'')+(item.error_message?'<br>⚠️ '+esc(item.error_message):'')+'</div></div></div><div class="schedule-actions">'+(editable?'<button onclick="editSchedule(\''+item.id+'\')">Edit</button>':'')+(st!== 'sent'?'<button class="danger" onclick="deleteSchedule(\''+item.id+'\')">Delete</button>':'')+'</div></div>';}).join('');}catch(e){box.innerHTML="<p class='help' style='color:#b42318'>Could not load schedules: "+esc(e.message)+"</p>";}};
+window.editSchedule=async(id)=>{try{const r=await api('notification_schedules?id=eq.'+encodeURIComponent(id)+'&select=*');const rows=await r.json();if(!rows.length)throw new Error('Scheduled notification not found.');const item=rows[0],st=String(item.status||'').toLowerCase();if(st==='sent')throw new Error('Sent notifications cannot be edited.');editingScheduleId=id;$("eTitle").value=item.title||'';$("eBody").value=item.body||'';$("eLink").value=item.link||'';const d=new Date(item.scheduled_at),p=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d),g=t=>p.find(x=>x.type===t)?.value||'';$("eDate").value=g('year')+'-'+g('month')+'-'+g('day');$("eTime").value=g('hour')+':'+g('minute');$("editModal").style.display='block';}catch(e){status('Edit failed: '+e.message,'err');}};
+window.closeEdit=()=>{$("editModal").style.display='none';};
+window.saveEdit=async()=>{if(!editingScheduleId)return;const title=$("eTitle").value.trim(),body=$("eBody").value.trim(),date=$("eDate").value,time=$("eTime").value;if(!title||!body||!date||!time){status('Please fill title, message, date and time.','err');return;}$("saveEditBtn").disabled=true;$("saveEditBtn").textContent='Saving...';try{await api('notification_schedules?id=eq.'+encodeURIComponent(editingScheduleId),{method:'PATCH',body:JSON.stringify({title,body,link:$("eLink").value.trim()||null,scheduled_at:new Date(date+'T'+time+':00').toISOString(),status:'pending',sent_at:null,error_message:null})});closeEdit();status('✓ Scheduled notification updated successfully.','ok');editingScheduleId=null;await loadSchedules();}catch(e){status('Update failed: '+e.message,'err');}finally{$("saveEditBtn").disabled=false;$("saveEditBtn").textContent='Save Changes';}};
+window.deleteSchedule=async(id)=>{if(!confirm('Delete this scheduled notification?'))return;try{await api('notification_schedules?id=eq.'+encodeURIComponent(id),{method:'DELETE'});status('✓ Scheduled notification deleted.','ok');await loadSchedules();}catch(e){status('Delete failed: '+e.message,'err');}};
+window.cancelScheduleEdit=()=>{editingScheduleId=null;$("sTitle").value='';$("sBody").value='';$("sLink").value='';$("scheduleBtn").textContent='Schedule';$("cancelScheduleEditBtn").style.display='none';};
 window.schedule=async()=>{
   const title=$("sTitle").value.trim(),body=$("sBody").value.trim(),date=$("sDate").value,time=$("sTime").value;
   if(!title||!body||!date||!time){status("Please fill title, message, date and time.","err");return;}
   try{
     await api("notification_schedules",{method:"POST",body:JSON.stringify({
       title,body,link:$("sLink").value.trim()||null,
-      scheduled_at:new Date(date+"T"+time+":00").toISOString()
+      scheduled_at:new Date(date+"T"+time+":00").toISOString(),status:"pending"
     })});
     status("✓ Notification scheduled successfully.","ok");
     $("sTitle").value="";$("sBody").value="";$("sLink").value="";
+    await loadSchedules();
   }catch(e){status("Schedule failed: "+e.message,"err");}
 };
 window.addBirthday=async()=>{
@@ -245,6 +282,7 @@ function render(){
 supabase.auth.onAuthStateChange(()=>render());
 $("sDate").value=new Date().toISOString().slice(0,10);
 render();
+setTimeout(loadSchedules,500);
 </script>
 </body>
 </html>
