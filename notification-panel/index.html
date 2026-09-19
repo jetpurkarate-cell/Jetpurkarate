@@ -3,59 +3,137 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Jetpur Karate Team - Notification Panel</title>
+<title>Jetpur Karate Team • Notification Center</title>
 <style>
-body{font-family:Arial,sans-serif;max-width:900px;margin:30px auto;padding:0 16px;background:#f5f5f5}
-.card{background:#fff;padding:20px;border-radius:12px;margin-bottom:18px;box-shadow:0 2px 10px #0001}
-input,textarea,button{width:100%;box-sizing:border-box;padding:11px;margin:6px 0 12px}
-button{cursor:pointer;font-weight:700}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-h1{margin-top:0}@media(max-width:650px){.row{grid-template-columns:1fr}}
-#status{font-weight:700}
+*{box-sizing:border-box}
+:root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#172033;background:#f4f7fb}
+body{margin:0;min-height:100vh;background:linear-gradient(135deg,#eef3ff 0%,#f8fafc 55%,#eef8f5 100%)}
+.wrap{max-width:1050px;margin:auto;padding:28px 16px 50px}
+.top{background:linear-gradient(135deg,#111827,#243b72);color:#fff;border-radius:24px;padding:28px 30px;box-shadow:0 18px 45px #17255422;margin-bottom:20px}
+.brand{display:flex;justify-content:space-between;align-items:center;gap:20px}
+.badge{display:inline-flex;align-items:center;gap:8px;background:#ffffff18;border:1px solid #ffffff25;border-radius:999px;padding:7px 12px;font-size:13px}
+.dot{width:8px;height:8px;border-radius:50%;background:#34d399}
+h1{margin:12px 0 5px;font-size:30px}
+.sub{margin:0;color:#dbe5ff}
+.card{background:#fff;border:1px solid #e6ebf3;border-radius:20px;padding:22px;box-shadow:0 10px 30px #1720330b;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.full{grid-column:1/-1}
+h2{font-size:19px;margin:0 0 5px}
+.help{color:#6b7280;font-size:13px;margin:0 0 15px}
+label{display:block;font-size:13px;font-weight:700;margin:10px 0 6px;color:#374151}
+input,textarea{width:100%;border:1px solid #d8dfeb;background:#fbfcfe;border-radius:12px;padding:12px 13px;font:inherit;outline:none}
+input:focus,textarea:focus{border-color:#607eea;box-shadow:0 0 0 3px #607eea18}
+textarea{min-height:100px;resize:vertical}
+button{border:0;border-radius:12px;padding:12px 16px;font-weight:800;font-size:14px;cursor:pointer;background:#243b72;color:#fff;transition:.15s}
+button:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.secondary{background:#eef2f7;color:#243047}
+.danger{background:#fff0f0;color:#b42318}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.actions button{min-width:145px}
+.login{max-width:460px;margin:8vh auto}
+.login .top{margin-bottom:16px}
+.icon{font-size:25px;margin-bottom:8px}
+#status{display:none;padding:14px 16px;border-radius:14px;font-weight:700;margin-bottom:16px}
+.ok{display:block!important;background:#ecfdf3;color:#067647;border:1px solid #abefc6}
+.err{display:block!important;background:#fef3f2;color:#b42318;border:1px solid #fecdca}
+.info{display:block!important;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.user{font-size:13px;color:#dbe5ff}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.brand{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
-<div id="loginCard" class="card">
-<h2>Admin Login</h2>
-<input id="email" type="email" placeholder="Admin email">
-<input id="password" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
-</div>
-<div id="app" style="display:none">
-<div class="card"><button onclick="logout()">Logout</button></div>
-<h1>Jetpur Karate Team</h1>
-
-<div class="card">
-<h2>Send Notification Now</h2>
-<input id="nowTitle" placeholder="Notification title">
-<textarea id="nowBody" placeholder="Notification message"></textarea>
-<input id="nowLink" placeholder="Optional website link">
-<button onclick="sendNow()">Send Now</button>
-</div>
-
-<div class="card">
-<h2>Schedule Notification</h2>
-<input id="sTitle" placeholder="Title">
-<textarea id="sBody" placeholder="Message"></textarea>
-<div class="row">
-<input id="sDate" type="date">
-<input id="sTime" type="time" value="09:00">
-</div>
-<input id="sLink" placeholder="Optional website link">
-<button onclick="schedule()">Schedule Notification</button>
+<div id="loginPage" class="wrap login">
+  <div class="top">
+    <div class="badge"><span class="dot"></span> Secure Admin Area</div>
+    <h1>Jetpur Karate Team</h1>
+    <p class="sub">Notification Center</p>
+  </div>
+  <div class="card">
+    <div class="icon">🔐</div>
+    <h2>Admin Login</h2>
+    <p class="help">Sign in with your Supabase admin account.</p>
+    <label>Email</label>
+    <input id="email" type="email" autocomplete="username" placeholder="Admin email">
+    <label>Password</label>
+    <input id="password" type="password" autocomplete="current-password" placeholder="Password">
+    <div class="actions"><button id="loginBtn" onclick="login()">Login</button></div>
+  </div>
 </div>
 
-<div class="card">
-<h2>Birthday Notification</h2>
-<input id="bName" placeholder="Student / Teacher / Member name">
-<div class="row">
-<input id="bDate" type="date">
-<input id="bBranch" placeholder="Branch (optional)">
-</div>
-<input id="bTime" type="time" value="09:00">
-<button onclick="addBirthday()">Save Birthday</button>
-</div>
+<div id="app" class="wrap" style="display:none">
+  <div class="top">
+    <div class="brand">
+      <div>
+        <div class="badge"><span class="dot"></span> Notification Center</div>
+        <h1>Jetpur Karate Team</h1>
+        <p class="sub">Send, schedule and manage member birthday notifications.</p>
+      </div>
+      <div>
+        <div id="userEmail" class="user"></div>
+        <button class="secondary" onclick="logout()" style="margin-top:8px">Logout</button>
+      </div>
+    </div>
+  </div>
 
-<div id="status" class="card"></div></div>
+  <div id="status"></div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="icon">📣</div>
+      <h2>Send Notification Now</h2>
+      <p class="help">Send immediately to Android devices subscribed to the Jetpur Karate notification topic.</p>
+      <label>Title</label>
+      <input id="nowTitle" placeholder="e.g. Today's Karate Class">
+      <label>Message</label>
+      <textarea id="nowBody" placeholder="Write your notification message..."></textarea>
+      <label>Website link (optional)</label>
+      <input id="nowLink" placeholder="https://jetpurkarate.in/">
+      <div class="actions"><button id="sendBtn" onclick="sendNow()">Send Now</button></div>
+    </div>
+
+    <div class="card">
+      <div class="icon">🗓️</div>
+      <h2>Schedule Notification</h2>
+      <p class="help">Choose an India-local date and time. The server will send it automatically.</p>
+      <label>Title</label>
+      <input id="sTitle" placeholder="Scheduled notification title">
+      <label>Message</label>
+      <textarea id="sBody" placeholder="Write the scheduled message..."></textarea>
+      <div class="grid" style="gap:10px">
+        <div><label>Date</label><input id="sDate" type="date"></div>
+        <div><label>Time</label><input id="sTime" type="time" value="09:00"></div>
+      </div>
+      <label>Website link (optional)</label>
+      <input id="sLink" placeholder="https://jetpurkarate.in/">
+      <div class="actions"><button onclick="schedule()">Schedule</button></div>
+    </div>
+
+    <div class="card full">
+      <div class="icon">🎂</div>
+      <h2>Birthday Notification</h2>
+      <p class="help">Save a member's birthday. The notification service checks birthdays daily and sends the configured message.</p>
+      <div class="grid">
+        <div>
+          <label>Name</label>
+          <input id="bName" placeholder="Student / Teacher / Member name">
+        </div>
+        <div>
+          <label>Branch (optional)</label>
+          <input id="bBranch" placeholder="Branch name">
+        </div>
+        <div>
+          <label>Birth date</label>
+          <input id="bDate" type="date">
+        </div>
+        <div>
+          <label>Notification time</label>
+          <input id="bTime" type="time" value="09:00">
+        </div>
+      </div>
+      <div class="actions"><button onclick="addBirthday()">Save Birthday</button></div>
+    </div>
+  </div>
+</div>
 
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -63,8 +141,19 @@ const SUPABASE_URL="https://avwpohoxcxbeezpuxbpr.supabase.co";
 const SUPABASE_KEY="sb_publishable_WLd8v0cTTUFFZany_sAfmg_FmIyei2f";
 const supabase=createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
+
+function status(message,type="info"){
+  const el=$("status"); el.className=type; el.textContent=message;
+}
+function cleanError(value){
+  try{
+    const obj=typeof value==="string"?JSON.parse(value):value;
+    return obj?.error || obj?.message || obj?.details || JSON.stringify(obj);
+  }catch{return String(value)}
+}
 async function session(){
-  const {data}=await supabase.auth.getSession();
+  const {data,error}=await supabase.auth.getSession();
+  if(error) throw error;
   return data.session;
 }
 async function api(path,options={}){
@@ -72,43 +161,89 @@ async function api(path,options={}){
   if(!s) throw new Error("Please login first.");
   const r=await fetch(SUPABASE_URL+"/rest/v1/"+path,{
     ...options,
-    headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+s.access_token,"Content-Type":"application/json",...(options.headers||{})}
+    headers:{
+      "apikey":SUPABASE_KEY,
+      "Authorization":"Bearer "+s.access_token,
+      "Content-Type":"application/json",
+      "Prefer":"return=minimal",
+      ...(options.headers||{})
+    }
   });
-  if(!r.ok) throw new Error(await r.text());
+  if(!r.ok) throw new Error(cleanError(await r.text()));
   return r;
 }
 window.login=async()=>{
-  const {error}=await supabase.auth.signInWithPassword({email:$("email").value,password:$("password").value});
-  if(error) $("status").textContent="Login error: "+error.message; else render();
+  $("loginBtn").disabled=true;
+  $("loginBtn").textContent="Signing in...";
+  try{
+    const {error}=await supabase.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+    if(error) throw error;
+    render();
+  }catch(e){ status("Login error: "+e.message,"err"); }
+  finally{$("loginBtn").disabled=false;$("loginBtn").textContent="Login";}
 };
 window.logout=async()=>{await supabase.auth.signOut();render();};
 window.sendNow=async()=>{
+  const title=$("nowTitle").value.trim(), body=$("nowBody").value.trim(), link=$("nowLink").value.trim();
+  if(!title||!body){status("Please enter both notification title and message.","err");return;}
+  const s=await session();
+  if(!s){status("Please login first.","err");return;}
+  $("sendBtn").disabled=true;$("sendBtn").textContent="Sending...";
+  status("Sending notification...","info");
   try{
-    const s=await session(); if(!s) throw new Error("Please login first.");
-    const r=await fetch(SUPABASE_URL+"/functions/v1/send-now",{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_KEY,"Authorization":"Bearer "+s.access_token},body:JSON.stringify({title:$("nowTitle").value,body:$("nowBody").value,link:$("nowLink").value})});
-    if(!r.ok) throw new Error(await r.text()); $("status").textContent="Notification sent.";
-  }catch(e){$("status").textContent="Error: "+e.message}
+    const r=await fetch(SUPABASE_URL+"/functions/v1/send-now",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "apikey":SUPABASE_KEY,
+        "Authorization":"Bearer "+s.access_token
+      },
+      body:JSON.stringify({title,body,link})
+    });
+    const raw=await r.text();
+    if(!r.ok) throw new Error(cleanError(raw));
+    const result=JSON.parse(raw);
+    if(!result.ok) throw new Error(cleanError(result));
+    status("✓ Notification sent successfully.","ok");
+    $("nowTitle").value="";$("nowBody").value="";$("nowLink").value="";
+  }catch(e){
+    status("Notification failed: "+e.message,"err");
+  }finally{$("sendBtn").disabled=false;$("sendBtn").textContent="Send Now";}
 };
 window.schedule=async()=>{
+  const title=$("sTitle").value.trim(),body=$("sBody").value.trim(),date=$("sDate").value,time=$("sTime").value;
+  if(!title||!body||!date||!time){status("Please fill title, message, date and time.","err");return;}
   try{
-    await api("notification_schedules",{method:"POST",body:JSON.stringify({title:$("sTitle").value,body:$("sBody").value,link:$("sLink").value||null,scheduled_at:new Date($("sDate").value+"T"+$("sTime").value).toISOString()})});
-    $("status").textContent="Notification scheduled.";
-  }catch(e){$("status").textContent="Error: "+e.message}
+    await api("notification_schedules",{method:"POST",body:JSON.stringify({
+      title,body,link:$("sLink").value.trim()||null,
+      scheduled_at:new Date(date+"T"+time+":00").toISOString()
+    })});
+    status("✓ Notification scheduled successfully.","ok");
+    $("sTitle").value="";$("sBody").value="";$("sLink").value="";
+  }catch(e){status("Schedule failed: "+e.message,"err");}
 };
 window.addBirthday=async()=>{
+  const name=$("bName").value.trim(),date=$("bDate").value;
+  if(!name||!date){status("Please enter the member name and birth date.","err");return;}
   try{
-    await api("birthdays",{method:"POST",body:JSON.stringify({person_name:$("bName").value,birth_date:$("bDate").value,branch_name:$("bBranch").value||null,notification_time:$("bTime").value})});
-    $("status").textContent="Birthday saved.";
-  }catch(e){$("status").textContent="Error: "+e.message}
+    await api("birthdays",{method:"POST",body:JSON.stringify({
+      person_name:name,birth_date:date,branch_name:$("bBranch").value.trim()||null,
+      notification_time:$("bTime").value||"09:00",notification_enabled:true
+    })});
+    status("✓ Birthday saved successfully.","ok");
+    $("bName").value="";$("bDate").value="";$("bBranch").value="";
+  }catch(e){status("Birthday save failed: "+e.message,"err");}
 };
 function render(){
   supabase.auth.getSession().then(({data})=>{
-    $("loginCard").style.display=data.session?"none":"block";
-    $("app").style.display=data.session?"block":"none";
-    $("status").textContent=data.session?"Logged in: "+(data.session.user.email||"admin"):"Please login.";
+    const logged=!!data.session;
+    $("loginPage").style.display=logged?"none":"block";
+    $("app").style.display=logged?"block":"none";
+    if(logged)$("userEmail").textContent=data.session.user.email||"Admin";
   });
 }
 supabase.auth.onAuthStateChange(()=>render());
+$("sDate").value=new Date().toISOString().slice(0,10);
 render();
 </script>
 </body>
