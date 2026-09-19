@@ -61,10 +61,16 @@ button:hover{transform:translateY(-1px);filter:brightness(1.05)}
     <h2>Admin Login</h2>
     <p class="help">Sign in with your Supabase admin account.</p>
     <label>Email</label>
-    <input id="email" type="email" autocomplete="username" placeholder="Admin email">
-    <label>Password</label>
-    <input id="password" type="password" autocomplete="current-password" placeholder="Password">
-    <div class="actions"><button id="loginBtn" onclick="login()">Login</button></div>
+    <input id="email" type="email" autocomplete="email" placeholder="Admin email">
+    <div id="otpArea" style="display:none">
+      <label>OTP</label>
+      <input id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit OTP">
+    </div>
+    <div class="actions">
+      <button id="loginBtn" onclick="sendOtp()">Send OTP</button>
+      <button id="verifyBtn" class="secondary" onclick="verifyOtp()" style="display:none">Verify OTP</button>
+    </div>
+    <p class="help">Enter your admin email. An OTP will be sent to that email.</p>
   </div>
 </div>
 
@@ -200,15 +206,43 @@ async function api(path,options={}){
   if(!r.ok) throw new Error(cleanError(await r.text()));
   return r;
 }
-window.login=async()=>{
+window.sendOtp=async()=>{
+  const email=$("email").value.trim();
+  if(!email){status("Please enter your admin email.","err");return;}
   $("loginBtn").disabled=true;
-  $("loginBtn").textContent="Signing in...";
+  $("loginBtn").textContent="Sending OTP...";
   try{
-    const {error}=await supabase.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+    const {error}=await supabase.auth.signInWithOtp({
+      email,
+      options:{shouldCreateUser:false}
+    });
     if(error) throw error;
+    $("otpArea").style.display="block";
+    $("verifyBtn").style.display="inline-block";
+    $("loginBtn").textContent="Resend OTP";
+    status("✓ OTP sent to "+email+". Check your email.","ok");
+  }catch(e){
+    status("OTP send failed: "+e.message,"err");
+    $("loginBtn").textContent="Send OTP";
+  }finally{$("loginBtn").disabled=false;}
+};
+window.verifyOtp=async()=>{
+  const email=$("email").value.trim(), token=$("otp").value.trim();
+  if(!email||!token){status("Please enter email and OTP.","err");return;}
+  $("verifyBtn").disabled=true;
+  $("verifyBtn").textContent="Verifying...";
+  try{
+    const {data,error}=await supabase.auth.verifyOtp({email,token,type:"email"});
+    if(error) throw error;
+    if(!data.session) throw new Error("OTP verified but no session was created.");
+    status("✓ Login successful.","ok");
     render();
-  }catch(e){ status("Login error: "+e.message,"err"); }
-  finally{$("loginBtn").disabled=false;$("loginBtn").textContent="Login";}
+  }catch(e){
+    status("OTP verification failed: "+e.message,"err");
+  }finally{
+    $("verifyBtn").disabled=false;
+    $("verifyBtn").textContent="Verify OTP";
+  }
 };
 window.logout=async()=>{await supabase.auth.signOut();render();};
 window.sendNow=async()=>{
