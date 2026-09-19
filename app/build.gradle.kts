@@ -25,5 +25,4 @@ dependencies {
     implementation("androidx.core:core:1.15.0")
     implementation("androidx.activity:activity:1.10.0")
     implementation("com.google.firebase:firebase-messaging:24.1.0")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }
