@@ -64,13 +64,13 @@ button:hover{transform:translateY(-1px);filter:brightness(1.05)}
     <input id="email" type="email" autocomplete="email" placeholder="Admin email">
     <div id="otpArea" style="display:none">
       <label>OTP</label>
-      <input id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit OTP">
+      <input id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="8" minlength="8" pattern="[0-9]{8}" placeholder="8-digit OTP">
     </div>
     <div class="actions">
       <button id="loginBtn" onclick="sendOtp()">Send OTP</button>
       <button id="verifyBtn" class="secondary" onclick="verifyOtp()" style="display:none">Verify OTP</button>
     </div>
-    <p class="help">Enter your admin email. An OTP will be sent to that email.</p>
+    <p class="help">Enter your admin email. An 8-digit OTP will be sent to that email.</p>
   </div>
 </div>
 
@@ -228,7 +228,7 @@ window.sendOtp=async()=>{
 };
 window.verifyOtp=async()=>{
   const email=$("email").value.trim(), token=$("otp").value.trim();
-  if(!email||!token){status("Please enter email and OTP.","err");return;}
+  if(!email||!token){status("Please enter email and 8-digit OTP.","err");return;}\n  if(!/^\\d{8}$/.test(token)){status("Please enter the complete 8-digit OTP.","err");return;}
   $("verifyBtn").disabled=true;
   $("verifyBtn").textContent="Verifying...";
   try{
