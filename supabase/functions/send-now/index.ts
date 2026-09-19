@@ -118,7 +118,7 @@ Deno.serve(async req => {
         body: JSON.stringify({
           message: {
             topic: "all",
-            notification: { title, body: messageBody },
+            notification: { title, body: messageBody, image: "https://jetpurkarate.in/favicon.png" },
             data: link ? { link } : {}
           }
         })
