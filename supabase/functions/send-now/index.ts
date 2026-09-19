@@ -44,6 +44,16 @@ async function getToken() {
     exp: now + 3600
   })).replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
 
+  if (!account || typeof account !== "object") {
+    throw new Error("FCM service-account data is not an object.");
+  }
+  if (!account.client_email) {
+    throw new Error("FCM service-account JSON is missing client_email. Please use the Firebase service-account JSON, not google-services.json.");
+  }
+  if (!account.private_key || typeof account.private_key !== "string") {
+    throw new Error("FCM service-account JSON is missing private_key. Please paste the complete Firebase service-account JSON into Supabase secret FCM_SERVICE_ACCOUNT_JSON.");
+  }
+
   const pem = account.private_key
     .replace("-----BEGIN PRIVATE KEY-----", "")
     .replace("-----END PRIVATE KEY-----", "")
