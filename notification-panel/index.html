@@ -300,9 +300,27 @@ function render(){
     if(logged)$("userEmail").textContent=data.session.user.email||"Admin";
   });
 }
-supabase.auth.onAuthStateChange(()=>render());
-render();
-setTimeout(loadSchedules,500);
+let scheduleAutoRefreshTimer=null;
+function startScheduleAutoRefresh(){
+  if(scheduleAutoRefreshTimer) clearInterval(scheduleAutoRefreshTimer);
+  loadSchedules();
+  scheduleAutoRefreshTimer=setInterval(()=>{
+    supabase.auth.getSession().then(({data})=>{
+      if(data.session) loadSchedules();
+    });
+  },10000);
+}
+function stopScheduleAutoRefresh(){
+  if(scheduleAutoRefreshTimer){clearInterval(scheduleAutoRefreshTimer);scheduleAutoRefreshTimer=null;}
+}
+supabase.auth.onAuthStateChange(()=>renderAndLoad());
+async function renderAndLoad(){
+  await render();
+  const {data}=await supabase.auth.getSession();
+  if(data.session) startScheduleAutoRefresh();
+  else stopScheduleAutoRefresh();
+}
+renderAndLoad();
 </script>
 </body>
 </html>
