@@ -72,6 +72,9 @@ async function sendTopic(title:string, body:string, link?:string) {
 
 Deno.serve(async (req) => {
   try {
+    if (req.headers.get("x-cron-secret") !== Deno.env.get("CRON_SECRET")) {
+      return Response.json({ok:false,error:"Unauthorized"}, {status:401});
+    }
     const now = new Date();
 
     const { data: schedules, error: scheduleError } = await supabase
@@ -100,18 +103,20 @@ Deno.serve(async (req) => {
       }
     }
 
-    const dateText = now.toISOString().slice(0,10);
-    const year = now.getUTCFullYear();
+    const year = Number(new Intl.DateTimeFormat("en-US", {timeZone:"Asia/Kolkata", year:"numeric"}).format(now));
+    const monthDay = new Intl.DateTimeFormat("en-CA", {timeZone:"Asia/Kolkata", month:"2-digit", day:"2-digit"}).format(now).slice(5);
+    const hhmm = new Intl.DateTimeFormat("en-GB", {timeZone:"Asia/Kolkata", hour:"2-digit", minute:"2-digit", hour12:false}).format(now);
     const { data: birthdays, error: birthdayError } = await supabase
       .from("birthdays")
       .select("*")
-      .eq("notification_enabled", true)
-      .eq("birth_date", dateText);
+      .eq("notification_enabled", true);
 
     if (birthdayError) throw birthdayError;
 
     for (const person of birthdays ?? []) {
-      if (person.last_notified_year === year) continue;
+      const md = String(person.birth_date).slice(5);
+      const notificationTime = String(person.notification_time).slice(0,5);
+      if (md !== monthDay || notificationTime !== hhmm || person.last_notified_year === year) continue;
       try {
         await sendTopic(
           "🎂 Happy Birthday!",
