@@ -71,6 +71,8 @@ public class MainActivity extends ComponentActivity {
         webView.getSettings().setAllowContentAccess(true);
 
         webView.addJavascriptInterface(new PrintBridge(), "AndroidPrint");
+        // Teacher notification: website teacher login par potani topic subscribe/unsubscribe kare chhe
+        webView.addJavascriptInterface(new JKBridge(), "JKApp");
 
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -201,6 +203,29 @@ public class MainActivity extends ComponentActivity {
                                 .build()
                 );
             });
+        }
+    }
+
+    // Website (index.html) aa bridge "JKApp" naam thi vapare chhe.
+    // Surakshit rahevā mate fakt "teacher_" thi sharu thata topics j chalse.
+    private static class JKBridge {
+        private boolean isAllowed(String topic) {
+            return topic != null && topic.startsWith("teacher_") && topic.length() <= 100
+                    && topic.matches("[a-zA-Z0-9\\-_.~%]+");
+        }
+
+        @JavascriptInterface
+        public void subscribeTopic(String topic) {
+            if (isAllowed(topic)) {
+                FirebaseMessaging.getInstance().subscribeToTopic(topic);
+            }
+        }
+
+        @JavascriptInterface
+        public void unsubscribeTopic(String topic) {
+            if (isAllowed(topic)) {
+                FirebaseMessaging.getInstance().unsubscribeFromTopic(topic);
+            }
         }
     }
 
